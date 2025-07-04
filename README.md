@@ -36,30 +36,36 @@ API de Webpay (pagos)
 
 API Banco Central (conversión de divisas)
 
+
 ## 📁 Estructura del Proyecto
 
 ```
 Ferremas-main/
 ├── server/
-│   ├── app.js
-│   ├── config/
-│   ├── controllers/
-│   ├── models/
-│   └── routes/
-├── pruebas/
-│   ├── Ferremas_Plan_Corregido_POST_JSON.jmx
-│   └── Plan_de_Pruebas_Ferremas.docx
-├── README.md
-└── ...
-```
+│       ├── config/
+│       ├── controllers/
+│       ├── middlewares/
+│       ├── migrations/
+│       ├── models/
+│       ├── public/
+│       ├── routes/
+│       ├── services/
+│       └── test/
+│    ├── app.js
+│    ├── generateCerts.js/
+│    ├── test-create.js/
+├── .env
+├── .sequelizerc
+├── package-lock.json
+├── package.json
+└── README.md
 
 ## 🚀 Instalacion y Ejecucion
 
 ### 1. Clonar repositorio
 
 ```bash
-git clone https://github.com/usuario/ferremas.git
-cd ferremas
+git clone https://github.com/ysesnou/ferremasexamen.git
 ```
 
 ### 2. Instalar dependencias
@@ -73,7 +79,13 @@ npm install
 - Ejecutar **XAMPP** (MySQL y Apache activos)
 - Verificar la base de datos `ferreteria` con tablas como `products`, `sucursales`, `orders`, `mensajes`.
 
-### 4. Iniciar el servidor
+### 4. Hacer cd a la carpeta server 
+
+```bash
+cd server
+```
+
+### 5. Iniciar el servidor
 
 ```bash
 node app.js
@@ -118,7 +130,7 @@ Se validaron los endpoints con diferentes parámetros
 
 Validación de errores, respuestas esperadas y formatos
 
-Uso de Selenium con archivo .side para pruebas automatizadas en el flujo de compra (por ejemplo: añadir producto al carrito y simular el pago)
+Uso de Selenium  para pruebas automatizadas en el flujo de compra (por ejemplo: añadir producto al carrito y simular el pago)
 
 ⚙️ Pruebas de carga (JMeter)
 
@@ -129,6 +141,25 @@ Archivo .jmx incluye:
 1 endpoint POST (/api/mensajes) con JSON
 
 Headers correctamente configurados (Content-Type: application/json)
+
+⚙️ Archivos para pruebas (si no estan en el github estan en el archivo .rar subido en el ava, en /pruebas)
+
+.jmx para pruebas en JMeter
+    abrir JMeter
+    ir a File > Open
+    seleccionar el archivo .jmx
+    cargaran todos las pruebas configuradas para correr
+
+.side para pruebas en Selenium
+    abrir Selenium IDE
+    hacer click en "Open Project" y abrir el archivo .side
+    cargaran todas las pruebas configuradas para correr
+
+.json para pruebas en Postman
+    abrir Postman
+    hacer click en "Import" arriba a la izquierda
+    eligir el archivo .json 
+    cargaran todas las pruebas POST, GET, PUT, PATCH y DEL configuradas para correr
 
 🧾 Plan de Pruebas Incluye:
 Objetivos y alcance
