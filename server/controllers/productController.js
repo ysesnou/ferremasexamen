@@ -1,11 +1,10 @@
 const Product = require('../models/Product');
 const { Op } = require('sequelize');
 
-
 const validateProductData = (data) => {
   const errors = [];
   if (!data.codigo || data.codigo.trim() === '') {
-  errors.push('El campo "codigo" es obligatorio');
+    errors.push('El campo "codigo" es obligatorio');
   }
   if (!data.nombre || data.nombre.trim() === '') {
     errors.push('El campo "nombre" es obligatorio');
@@ -20,11 +19,9 @@ const validateProductData = (data) => {
   } else if (data.stock < 0) {
     errors.push('El stock no puede ser negativo');
   }
-
   if (!data.categoria || data.categoria.trim() === '') {
     errors.push('El campo "categoria" es obligatorio');
   }
-
   return errors;
 };
 
@@ -38,100 +35,6 @@ exports.getProductByCodigo = async (req, res) => {
   }
 };
 
-
-// Controlador con validaciones mejoradas
-exports.createProduct = async (req, res) => {
-  try {
-    const validationErrors = validateProductData(req.body);
-    if (validationErrors.length > 0) {
-      return res.status(400).json({ 
-        message: 'Error de validación',
-        errors: validationErrors 
-      });
-    }
-
-    const productData = {
-      codigo: req.body.codigo?.trim(),
-      nombre: req.body.nombre.trim(),
-      descripcion: req.body.descripcion?.trim() || null,
-      precio: parseFloat(req.body.precio),
-      stock: parseInt(req.body.stock),
-      categoria: req.body.categoria.trim(),  // corregido aquí
-      imagen: req.body.imagen?.trim() || null,
-      sucursalId: req.body.sucursalId // asegúrate de enviarlo también
-    };
-
-    const product = await Product.create(productData);
-    
-    res.status(201).json({
-      message: 'Producto creado exitosamente',
-      data: product
-    });
-
-  } catch (error) {
-    console.error('Error en createProduct:', error);
-
-    if (error.name === 'SequelizeUniqueConstraintError') {
-      return res.status(400).json({ 
-        message: 'Error: El producto ya existe o hay datos duplicados' 
-      });
-    }
-    
-    res.status(500).json({ 
-      message: 'Error interno del servidor',
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
-    });
-  }
-};
-
-exports.getAllProducts = async (req, res) => {
-  try {
-    const { name, category, stock, page = 1, limit = 10, sort } = req.query;
-
-    const whereClause = {};
-
-    if (name) {
-      whereClause.nombre = { [Op.like]: `%${name}%` };
-    }
-
-    if (category) {
-      whereClause.categoria = category;
-    }
-
-    if (stock) {
-      whereClause.stock = { [Op.lt]: parseInt(stock) };
-    }
-
-    // Ordenamiento dinámico
-    let order = [];
-    if (sort) {
-      const [field, direction] = sort.split('_');
-      const validFields = ['precio', 'stock'];
-      const validDirections = ['asc', 'desc'];
-
-      if (validFields.includes(field) && validDirections.includes(direction)) {
-        order = [[field, direction.toUpperCase()]];
-      }
-    }
-
-    // Paginación
-    const offset = (parseInt(page) - 1) * parseInt(limit);
-
-    const products = await Product.findAll({
-      where: whereClause,
-      order,
-      offset,
-      limit: parseInt(limit)
-    });
-
-    res.json(products);
-  } catch (error) {
-    console.error('Error en getAllProducts:', error);
-    res.status(500).json({ message: error.message });
-  }
-};
-
-
 exports.getProductById = async (req, res) => {
   try {
     const product = await Product.findByPk(req.params.id);
@@ -144,10 +47,56 @@ exports.getProductById = async (req, res) => {
 
 exports.createProduct = async (req, res) => {
   try {
-    const product = await Product.create(req.body);
-    res.status(201).json(product);
+    const productData = {
+      codigo: req.body.codigo ? String(req.body.codigo).trim() : null,
+      nombre: req.body.nombre ? String(req.body.nombre).trim() : null,
+      descripcion: req.body.descripcion ? String(req.body.descripcion).trim() : null,
+      precio: Number(req.body.precio),
+      stock: Number(req.body.stock),
+      categoria: req.body.categoria ? String(req.body.categoria).trim() : null,
+      imagen: req.body.imagen ? String(req.body.imagen).trim() : null,
+      sucursalId: req.body.sucursalId ? Number(req.body.sucursalId) : null,
+      visible: req.body.visible !== undefined ? Boolean(req.body.visible) : true
+    };
+
+    // 💡 Log completo para depuración:
+    console.log("PRODUCT DATA A GUARDAR:", productData);
+
+    // Validación extrema
+    if (
+      !productData.codigo ||
+      !productData.nombre ||
+      isNaN(productData.precio) ||
+      isNaN(productData.stock) ||
+      !productData.categoria ||
+      isNaN(productData.sucursalId)
+    ) {
+      return res.status(400).json({
+        message: 'Validación fallida: Todos los campos obligatorios deben estar presentes y ser válidos'
+      });
+    }
+    console.log("PRODUCT DATA A GUARDAR:", productData);
+  
+    const product = await Product.create(productData);
+
+    res.status(201).json({
+      message: 'Producto creado exitosamente',
+      data: product
+    });
+
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    console.error('Error en createProduct:', error);
+
+    if (error.name === 'SequelizeUniqueConstraintError') {
+      return res.status(400).json({
+        message: 'Error: El producto ya existe o hay datos duplicados'
+      });
+    }
+
+    res.status(500).json({
+      message: 'Error interno del servidor',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 };
 
@@ -176,6 +125,61 @@ exports.deleteProduct = async (req, res) => {
     }
     throw new Error('Producto no encontrado');
   } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// 🔍 NUEVO: Buscar productos por categoría
+exports.getProductsByCategoria = async (req, res) => {
+  const categoria = req.params.categoria;
+  try {
+    const products = await Product.findAll({
+      where: {
+        categoria: {
+          [Op.like]: `%${categoria}%`
+        },
+        visible: true
+      }
+    });
+
+    if (products.length === 0) {
+      return res.status(404).json({ message: 'No se encontraron productos en esa categoría' });
+    }
+
+    res.json(products);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// 📦 NUEVO: Buscar productos con stock bajo
+exports.getProductsWithLowStock = async (req, res) => {
+  const min = parseInt(req.query.min) || 10;
+  try {
+    const products = await Product.findAll({
+      where: {
+        stock: {
+          [Op.lt]: min
+        },
+        visible: true
+      }
+    });
+
+    res.json(products);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// ✅ SOLO productos visibles para clientes
+exports.getAllProducts = async (req, res) => {
+  try {
+    const products = await Product.findAll({
+      where: { visible: true }
+    });
+    res.json(products);
+  } catch (error) {
+    console.error('Error en getAllProducts:', error);
     res.status(500).json({ message: error.message });
   }
 };

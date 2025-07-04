@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Confirmación de Pago - Ferremas</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .confirmation-container {
+            max-width: 600px;
+            margin: 2rem auto;
+            padding: 2rem;
+            text-align: center;
+            border: 1px solid #e1e1e1;
+            border-radius: 8px;
+        }
+        .confirmation-icon {
+            color: #4CAF50;
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="confirmation-container">
+        <div class="confirmation-icon">✓</div>
+        <h1>¡Pago Completado!</h1>
+        
+        <div id="transaction-details">
+            <p>Gracias por tu compra. Hemos recibido tu pago correctamente.</p>
+            <div id="loading-details">Cargando detalles...</div>
+        </div>
+
+        <div class="actions">
+            <a href="/" class="btn">Volver al Inicio</a>
+            <a href="/mis-ordenes" class="btn">Ver mis Órdenes</a>
+        </div>
+    </div>
+
+    <script>
+        // Obtener token de la URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const token = urlParams.get('token');
+        
+        if (token) {
+            fetch(`/api/webpay/status/${token}`)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('loading-details').innerHTML = `
+                        <p>Orden: <strong>${data.buy_order || 'N/A'}</strong></p>
+                        <p>Monto: <strong>$${data.amount ? data.amount.toLocaleString('es-CL') : '0'} CLP</strong></p>
+                        <p>Fecha: <strong>${new Date().toLocaleDateString()}</strong></p>
+                    `;
+                    
+                    // Opcional: Guardar en localStorage para historial
+                    const transaction = {
+                        id: data.buy_order,
+                        amount: data.amount,
+                        date: new Date(),
+                        items: JSON.parse(localStorage.getItem('cartItems') || '[]')
+                    };
+                    localStorage.setItem('lastTransaction', JSON.stringify(transaction));
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    document.getElementById('loading-details').innerHTML = 
+                        '<p>Los detalles de la transacción no están disponibles.</p>';
+                });
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,24 @@
+{
+  "development": {
+    "username": "root",
+    "password": "",
+    "database": "ferreteria",
+    "host": "localhost",
+    "dialect": "mysql",
+    "port": 3306
+  },
+  "test": {
+    "username": "root",
+    "password": "",
+    "database": "ferreteria_test",
+    "host": "localhost",
+    "dialect": "mysql"
+  },
+  "production": {
+    "username": "root",
+    "password": "",
+    "database": "ferreteria_prod",
+    "host": "localhost",
+    "dialect": "mysql"
+  }
+}
