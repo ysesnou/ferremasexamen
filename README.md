@@ -91,10 +91,20 @@ cd server
 node app.js
 ```
 
-### 5. Abrir localhost
+### 6. Abrir localhost
 
 ```bash
 http://localhost:3000/login.html
+```
+
+### 7. Iniciar sesion como admin
+
+```bash
+admin
+```
+
+```bash
+admin123
 ```
 
 ---
